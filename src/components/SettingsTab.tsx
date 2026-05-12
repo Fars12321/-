@@ -10,12 +10,18 @@ interface SettingsTabProps {
   setAmbientType: (type: string) => void;
   hapticIntensity: 'none' | 'light' | 'medium' | 'heavy';
   setHapticIntensity: (intensity: 'none' | 'light' | 'medium' | 'heavy') => void;
+  sfxVolume: number;
+  setSfxVolume: (vol: number) => void;
+  ambientVolume: number;
+  setAmbientVolume: (vol: number) => void;
 }
 
 export function SettingsTab({ 
   tapSoundStyle, setTapSoundStyle, 
   ambientType, setAmbientType,
-  hapticIntensity, setHapticIntensity
+  hapticIntensity, setHapticIntensity,
+  sfxVolume, setSfxVolume,
+  ambientVolume, setAmbientVolume
 }: SettingsTabProps) {
   const { theme } = useTheme();
 
@@ -26,7 +32,7 @@ export function SettingsTab({
       <div className={cn("p-6 rounded-[32px] border border-current/10 w-full mb-6", theme.cardClass, theme.textClass)}>
         <h2 className="text-xl font-bold mb-6 font-serif">إعدادات الصوت والاهتزاز</h2>
         
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Haptic Intensity */}
           <div>
             <label className="block text-sm opacity-80 mb-3 font-bold">قوة الاهتزاز</label>
@@ -56,7 +62,7 @@ export function SettingsTab({
           {/* Tap Sound Style */}
           <div>
             <label className="block text-sm opacity-80 mb-3 font-bold">صوت التسبيح</label>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               {[
                 { id: 'default', label: 'الافتراضي' },
                 { id: 'wood', label: 'خشبي' },
@@ -77,12 +83,26 @@ export function SettingsTab({
                 </button>
               ))}
             </div>
+            
+            {/* SFX Volume Slider */}
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-sm opacity-80 whitespace-nowrap">مستوى الصوت:</span>
+              <input 
+                type="range" 
+                min="0" max="1" step="0.01" 
+                value={sfxVolume} 
+                onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
+                className="w-full accent-current h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                style={{ accentColor: 'currentColor' }}
+              />
+              <span className="text-sm font-bold w-12 text-center">{Math.round(sfxVolume * 100)}%</span>
+            </div>
           </div>
 
           {/* Ambient Sound */}
           <div>
              <label className="block text-sm opacity-80 mb-3 font-bold">صوت الخلفية (أجواء)</label>
-             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 {[
                   { id: 'none', label: 'بدون' },
                   { id: 'brownNoise', label: 'ضوضاء هادئة' },
@@ -103,6 +123,22 @@ export function SettingsTab({
                   </button>
                 ))}
              </div>
+             
+             {/* Ambient Volume Slider */}
+             {ambientType !== 'none' && (
+               <div className="flex items-center gap-4 mt-2 transition-all">
+                 <span className="text-sm opacity-80 whitespace-nowrap">مستوى الخلفية:</span>
+                 <input 
+                   type="range" 
+                   min="0" max="1" step="0.01" 
+                   value={ambientVolume} 
+                   onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                   className="w-full accent-current h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                   style={{ accentColor: 'currentColor' }}
+                 />
+                 <span className="text-sm font-bold w-12 text-center">{Math.round(ambientVolume * 100)}%</span>
+               </div>
+             )}
           </div>
         </div>
       </div>

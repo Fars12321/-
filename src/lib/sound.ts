@@ -2,6 +2,31 @@ class SoundManager {
   private audioCtx: AudioContext | null = null;
   private ambientSource: AudioBufferSourceNode | null = null;
   private ambientGain: GainNode | null = null;
+  private currentAmbientType: string = 'none';
+
+  public sfxVolume: number = 1.0;
+  private _ambientVolume: number = 1.0;
+
+  public set ambientVolume(value: number) {
+    this._ambientVolume = value;
+    this.updateAmbientVolume();
+  }
+
+  public get ambientVolume(): number {
+    return this._ambientVolume;
+  }
+
+  private updateAmbientVolume() {
+    if (this.ambientGain) {
+      // Base gain depends on type
+      let baseGain = 0;
+      if (this.currentAmbientType === 'space') baseGain = 0.05;
+      else if (this.currentAmbientType === 'nature') baseGain = 0.02;
+      else if (this.currentAmbientType === 'brownNoise') baseGain = 0.02;
+      
+      this.ambientGain.gain.setValueAtTime(baseGain * this._ambientVolume, this.audioCtx?.currentTime || 0);
+    }
+  }
 
   public init() {
     if (!this.audioCtx) {
@@ -19,7 +44,7 @@ class SoundManager {
   playBeep(frequency = 440, duration = 0.1, type: OscillatorType = 'sine', volume = 0.5) {
     try {
       this.init();
-      if (!this.audioCtx || this.audioCtx.state === 'suspended') return;
+      if (!this.audioCtx || this.audioCtx.state === 'suspended' || this.sfxVolume <= 0) return;
 
       const oscillator = this.audioCtx.createOscillator();
       const gainNode = this.audioCtx.createGain();
@@ -27,7 +52,8 @@ class SoundManager {
       oscillator.type = type;
       oscillator.frequency.setValueAtTime(frequency, this.audioCtx.currentTime);
 
-      gainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime);
+      const finalVolume = volume * this.sfxVolume;
+      gainNode.gain.setValueAtTime(finalVolume, this.audioCtx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
 
       oscillator.connect(gainNode);
@@ -39,6 +65,7 @@ class SoundManager {
       console.warn("Audio playback failed", e);
     }
   }
+
 
   playTapSound(style: string = 'default') {
     switch (style) {
@@ -139,6 +166,7 @@ class SoundManager {
 
   startAmbient(type: string = 'none') {
     this.stopAmbient();
+    this.currentAmbientType = type;
     if (type === 'none') return;
 
     try {
@@ -171,8 +199,7 @@ class SoundManager {
       this.ambientSource.loop = true;
 
       this.ambientGain = this.audioCtx.createGain();
-      this.ambientGain.gain.value = type === 'space' ? 0.05 : 0.02;
-
+      
       const filter = this.audioCtx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.value = type === 'space' ? 400 : 800;
@@ -180,6 +207,9 @@ class SoundManager {
       this.ambientSource.connect(filter);
       filter.connect(this.ambientGain);
       this.ambientGain.connect(this.audioCtx.destination);
+
+      // Trigger update to apply volume immediately
+      this.updateAmbientVolume();
 
       this.ambientSource.start();
 

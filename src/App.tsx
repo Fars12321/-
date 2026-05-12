@@ -53,6 +53,16 @@ function MisbahaApp() {
     return localStorage.getItem('misbaha-current-thikr') || 'سبحان الله';
   });
 
+  const [sfxVolume, setSfxVolume] = useState(() => {
+    const saved = localStorage.getItem('misbaha-sfx-vol');
+    return saved !== null ? parseFloat(saved) : 1.0;
+  });
+
+  const [ambientVolume, setAmbientVolume] = useState(() => {
+    const saved = localStorage.getItem('misbaha-ambient-vol');
+    return saved !== null ? parseFloat(saved) : 1.0;
+  });
+
   const [thikrStats, setThikrStats] = useState<Record<string, number>>(() => {
     try {
       return JSON.parse(localStorage.getItem('misbaha-thikr-stats') || '{}');
@@ -63,6 +73,17 @@ function MisbahaApp() {
 
   const [showMenu, setShowMenu] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  // Apply volumes to sound manager
+  useEffect(() => {
+    soundManager.sfxVolume = sfxVolume;
+    localStorage.setItem('misbaha-sfx-vol', sfxVolume.toString());
+  }, [sfxVolume]);
+
+  useEffect(() => {
+    soundManager.ambientVolume = ambientVolume;
+    localStorage.setItem('misbaha-ambient-vol', ambientVolume.toString());
+  }, [ambientVolume]);
 
   // Reset daily count if it's a new day
   useEffect(() => {
@@ -311,6 +332,10 @@ function MisbahaApp() {
               setAmbientType={setAmbientType}
               hapticIntensity={hapticIntensity}
               setHapticIntensity={setHapticIntensity}
+              sfxVolume={sfxVolume}
+              setSfxVolume={setSfxVolume}
+              ambientVolume={ambientVolume}
+              setAmbientVolume={setAmbientVolume}
             />
           </div>
         )}
